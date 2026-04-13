@@ -1,0 +1,59 @@
+# IDE Settings
+.idea/
+.vscode/
+.eclipse/
+.classpath
+.project
+.settings/
+*.iml
+*.ipr
+*.iws
+
+# Build Artifacts
+target/        # Maven build output directory
+build/         # Gradle build output directory
+out/           # IntelliJ output directory
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
+
+# Maven and Gradle specific files
+.mvn/wrapper/maven-wrapper.jar
+!**/.mvn/wrapper/maven-wrapper.jar # Some sources recommend keeping the wrapper scripts in version control, but ignoring the jar
+.gradle/
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Logs and Temporary files
+logs/
+*.log
+*.tmp
+*.swp
+*~
+.#*
+
+# System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment Variables and Secrets
+# Do not commit files containing database credentials or API keys
+.env
+# application.properties (Now versioned)
+# application.yml
+# Use environment variables or non-versioned files for sensitive data
+# e.g., application-dev.properties can be committed, but application-prod.properties might be ignored.
+
+# Testing
+test-reports/
+coverage/
+
+# Node.js dependencies (if applicable to your project)
+node_modules/
+bower_components/
+/build/
+/bin/
+
