@@ -34,7 +34,7 @@ public class GoogleCalendarWebhookController {
             @HeaderParam("X-Goog-Channel-Token") String channelToken,
             @HeaderParam("X-Goog-Resource-State") String resourceState) {
 
-        log.info("Received Google Calendar webhook: channelId={}, status={}", channelId, resourceState);
+        log.info("Received Google Calendar webhook. ChannelId: {}, ResourceState: {}", channelId, resourceState);
 
         try {
             // 1. Validate channel and token

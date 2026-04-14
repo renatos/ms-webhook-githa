@@ -16,6 +16,7 @@ public class ForwardWebhookPayloadUseCase {
         log.info("Forwarding validated webhook payload for channelId: {}", channelId);
         try {
             coreBackendGateway.forwardCalendarWebhook(channelId);
+            log.info("Successfully forwarded webhook payload for channelId: {} to core backend", channelId);
         } catch (Exception e) {
             log.error("Failed to forward webhook to core backend. Channel: {}", channelId, e);
             throw new RuntimeException("Core backend integration failed", e);

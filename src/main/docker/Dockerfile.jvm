@@ -1,0 +1,15 @@
+FROM container-registry.oracle.com/java/openjdk:25
+
+ENV LANGUAGE='pt_BR:pt'
+
+WORKDIR /deployments
+
+COPY build/quarkus-app/lib/ /deployments/lib/
+COPY build/quarkus-app/*.jar /deployments/
+COPY build/quarkus-app/app/ /deployments/app/
+COPY build/quarkus-app/quarkus/ /deployments/quarkus/
+
+EXPOSE 8085
+USER 1001
+
+ENTRYPOINT [ "java", "-Dquarkus.http.host=0.0.0.0", "-Djava.util.logging.manager=org.jboss.logmanager.LogManager", "-jar", "/deployments/quarkus-run.jar" ]

@@ -1,0 +1,32 @@
+services:
+  ms-webhook-githa:
+    image: ${OCIR_REGISTRY}/${OCIR_NAMESPACE}/ms-webhook-githa:latest
+    container_name: ms-webhook-githa
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/githa
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      QUARKUS_HTTP_HOST: 0.0.0.0
+      QUARKUS_HTTP_PORT: 8085
+    ports:
+      - "8085:8085"
+    networks:
+      - githa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/q/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  githa-network:
+    external: true
+    name: githa-network

@@ -14,7 +14,9 @@ public interface GithaCoreRestClient {
     String fetchFreshAccessToken(@QueryParam("email") String email);
 
     @POST
-    @Path("/webhooks/google/calendar/process")
+    @Path("/webhooks/sync")
     @Consumes(MediaType.APPLICATION_JSON)
-    void forwardCalendarWebhook(@QueryParam("channelId") String channelId);
+    void forwardCalendarWebhook(WebhookSyncRequest request);
+
+    record WebhookSyncRequest(String channelId) {}
 }

@@ -14,6 +14,6 @@ public class CoreBackendGatewayImpl implements CoreBackendGateway {
 
     @Override
     public void forwardCalendarWebhook(String channelId) {
-        restClient.forwardCalendarWebhook(channelId);
+        restClient.forwardCalendarWebhook(new GithaCoreRestClient.WebhookSyncRequest(channelId));
     }
 }
