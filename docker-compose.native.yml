@@ -1,7 +1,7 @@
 services:
   ms-webhook-githa:
     build:
-      context: .
+      context: ./source
       dockerfile: src/main/docker/Dockerfile.native
     container_name: ms-webhook-githa
     restart: unless-stopped
