@@ -3,7 +3,7 @@ name: Deploy ms-webhook-githa to OCI
 on:
   push:
     tags:
-      - 'ms-webhook-v*'
+      - 'v*'
   workflow_dispatch:
     inputs:
       deployment_type:
@@ -51,7 +51,7 @@ jobs:
 
   deploy-native-to-vm:
     name: Deploy Native to VM (Via SSH Build)
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deployment_type == 'native'
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.deployment_type == 'native')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -71,10 +71,15 @@ jobs:
           username: ubuntu
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |
+            set -e
             export SDKMAN_DIR="$HOME/.sdkman"
             [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
             
             cd /opt/ms-webhook-githa/source
+            
+            # Debug: List context to verify files
+            echo "Verifying files in /opt/ms-webhook-githa/source:"
+            ls -la
             
             # Setup environment (Sharing same secrets as backend)
             JWT_SECRET_B64URL=$(echo -n "${{ secrets.JWT_SECRET }}" | tr '+/' '-_' | tr -d '=')
@@ -101,6 +106,8 @@ jobs:
             }
             EOF
             
-            cp docker-compose.native.yml /opt/ms-webhook-githa/docker-compose.native.yml
+            echo "Copying docker-compose.native.yml to root..."
+            cp -f docker-compose.native.yml /opt/ms-webhook-githa/docker-compose.native.yml
+            
             chmod +x build-native.sh
             ./build-native.sh
