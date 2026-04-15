@@ -218,8 +218,8 @@ jobs:
             EOF
             
             # Copiar docker-compose.native.yml para o nível superior
-            cp -f docker-compose.native.yml /opt/ms-webhook-githa/docker-compose.native.yml
+            cp docker-compose.native.yml /opt/ms-webhook-githa/docker-compose.native.yml
             
-            # Executar script de build (que agora está em /opt/githa/source/build-native.sh)
+            # Executar script de build (que agora está em /opt/ms-webhook-githa/source/build-native.sh)
             chmod +x build-native.sh
             ./build-native.sh
