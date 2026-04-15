@@ -39,10 +39,19 @@ public class InternalWebhookController {
         log.info("Received internal request to register webhook for user {}", request.getUserEmail());
         try {
             CalendarWebhookChannel channel = registerUseCase.execute(request.getAccessToken(), request.getUserEmail());
+            log.info("Webhook channel registered successfully for user {}: channelId={}", 
+                    request.getUserEmail(), channel.getChannelId());
             return Response.ok(channel).build();
         } catch (Exception e) {
-            log.error("Failed to register webhook", e);
-            return Response.serverError().entity(e.getMessage()).build();
+            Throwable root = e;
+            while (root.getCause() != null) root = root.getCause();
+            log.error("Failed to register webhook for user {}: [{}] {}", 
+                    request.getUserEmail(), root.getClass().getSimpleName(), root.getMessage(), e);
+            return Response.serverError()
+                    .entity(java.util.Map.of(
+                            "error", root.getClass().getSimpleName(),
+                            "message", root.getMessage() != null ? root.getMessage() : "Unknown error"))
+                    .build();
         }
     }
 
