@@ -6,6 +6,7 @@ import com.githa.dataprovider.database.entity.CalendarWebhookChannelEntity;
 import com.githa.dataprovider.database.mapper.CalendarWebhookChannelEntityMapper;
 import com.githa.dataprovider.database.repository.CalendarWebhookChannelRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
+@Transactional
 public class WebhookChannelGatewayImpl implements WebhookChannelGateway {
 
     private final CalendarWebhookChannelRepository repository;
