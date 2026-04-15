@@ -1,8 +1,35 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: githa-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: githa
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - githa_data:/var/lib/postgresql/data
+    networks:
+      - githa-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d githa" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   ms-webhook-githa:
-    image: ${OCIR_REGISTRY}/${OCIR_NAMESPACE}/ms-webhook-githa:latest
+    image: ms-webhook-githa:latest
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.jvm
     container_name: ms-webhook-githa
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -12,6 +39,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       QUARKUS_HTTP_HOST: 0.0.0.0
       QUARKUS_HTTP_PORT: 8085
+      GITHA_CORE_URL: http://githa-backend:8080
     ports:
       - "8085:8085"
     networks:
@@ -21,12 +49,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+
+volumes:
+  githa_data:
+    driver: local
 
 networks:
   githa-network:
-    external: true
     name: githa-network
+    driver: bridge
