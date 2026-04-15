@@ -26,15 +26,16 @@ public class GoogleCalendarWebhookController {
     ForwardWebhookPayloadUseCase forwardWebhookPayloadUseCase;
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @RunOnVirtualThread
     public Response handleWebhook(
             @HeaderParam("X-Goog-Channel-ID") String channelId,
             @HeaderParam("X-Goog-Channel-Token") String channelToken,
+            @HeaderParam("X-Goog-Resource-ID") String resourceId,
             @HeaderParam("X-Goog-Resource-State") String resourceState) {
 
-        log.info("Received Google Calendar webhook. ChannelId: {}, ResourceState: {}", channelId, resourceState);
+        log.info("Received Google Calendar webhook. ChannelId: {}, ResourceState: {}, ResourceId: {}", 
+                channelId, resourceState, resourceId);
 
         try {
             // 1. Validate channel and token
