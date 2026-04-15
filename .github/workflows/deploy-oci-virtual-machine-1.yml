@@ -1,4 +1,4 @@
-name: Deploy ms-webhook-githa to OCI
+name: Deploy ms-webhook-githa to OCI Virtual Machine 1
 
 on:
   push:
@@ -27,6 +27,8 @@ jobs:
     # Executa se for tag (v*) OU se o input for 'jvm'
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.deployment_type == 'jvm')
     runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
     
     steps:
       - name: Checkout
@@ -71,6 +73,15 @@ jobs:
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.OCIR_REGISTRY }}/${{ env.OCIR_NAMESPACE }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=prod-
+            latest
       
       - name: Login to OCIR
         uses: docker/login-action@v3
@@ -85,8 +96,10 @@ jobs:
           context: .
           file: src/main/docker/Dockerfile.jvm
           push: true
-          tags: ${{ env.OCIR_REGISTRY }}/${{ env.OCIR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
-          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/arm64
+          cache-from: type=registry,ref=${{ env.OCIR_REGISTRY }}/${{ env.OCIR_NAMESPACE }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.OCIR_REGISTRY }}/${{ env.OCIR_NAMESPACE }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
   deploy-jvm-to-vm:
     name: Deploy JVM to VM
@@ -104,7 +117,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.prod.yml"
           target: "/opt/ms-webhook-githa/"
 
       - name: Deploy to VM via SSH
@@ -121,6 +134,7 @@ jobs:
           envs: OCIR_REGISTRY,OCIR_NAMESPACE,IMAGE_NAME
           script: |
             cd /opt/ms-webhook-githa
+            mv -f docker-compose.prod.yml docker-compose.yml
             echo "${{ secrets.OCI_AUTH_TOKEN }}" | docker login ${{ env.OCIR_REGISTRY }} -u '${{ secrets.OCIR_USERNAME }}' --password-stdin
             IMAGE_TAG="${OCIR_REGISTRY}/${OCIR_NAMESPACE}/${IMAGE_NAME}:latest"
             docker pull $IMAGE_TAG
@@ -142,7 +156,7 @@ jobs:
             OCIR_REGISTRY=${{ env.OCIR_REGISTRY }}
             OCIR_NAMESPACE=${{ env.OCIR_NAMESPACE }}
             EOF
-            
+            sed -i "s|image:.*ms-webhook-githa:.*|image: $IMAGE_TAG|" docker-compose.yml
             docker compose up -d
             docker image prune -f
 
@@ -169,8 +183,9 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          port: 22
           script: |
-            set -e
+            # Source SDKMAN to get Java (Gradle needs it for the wrapper)
             export SDKMAN_DIR="$HOME/.sdkman"
             [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
             
@@ -190,9 +205,11 @@ jobs:
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             GITHA_ENCRYPTION_KEY=${{ secrets.GITHA_ENCRYPTION_KEY }}
             GITHA_CORE_URL=http://githa-backend:8080
+            OCIR_REGISTRY=${{ env.OCIR_REGISTRY }}
+            OCIR_NAMESPACE=${{ env.OCIR_NAMESPACE }}
             EOF
             
-            # JWK generation
+            # Gerar secret.jwk para o processo de build nativo (Quarkus incorpora no binário)
             cat <<EOF > src/main/resources/secret.jwk
             {
                 "kty": "oct",
@@ -200,7 +217,9 @@ jobs:
             }
             EOF
             
+            # Copiar docker-compose.native.yml para o nível superior
             cp -f docker-compose.native.yml /opt/ms-webhook-githa/docker-compose.native.yml
             
+            # Executar script de build (que agora está em /opt/githa/source/build-native.sh)
             chmod +x build-native.sh
             ./build-native.sh
