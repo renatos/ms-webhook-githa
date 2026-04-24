@@ -22,7 +22,6 @@ import java.util.UUID;
 @ApplicationScoped
 public class GoogleCalendarWebhookGatewayImpl implements CalendarWebhookGateway {
 
-    private static final String CALENDAR_ID = "primary";
     private static final String CHANNEL_TYPE = "web_hook";
 
     @ConfigProperty(name = "app.webhook.base-url")
@@ -45,9 +44,9 @@ public class GoogleCalendarWebhookGatewayImpl implements CalendarWebhookGateway 
                     .setAddress(targetUrl)
                     .setToken(verificationToken);
 
-            log.info("Registering Google Calendar webhook channel: id={}, url={}", channelId, targetUrl);
+            log.info("Registering Google Calendar webhook channel for {}: id={}, url={}", userEmail, channelId, targetUrl);
             
-            Channel registered = service.events().watch(CALENDAR_ID, content).execute();
+            Channel registered = service.events().watch(userEmail, content).execute();
             
             log.info("Channel registered successfully. ResourceId: {}, Expiration: {}", 
                     registered.getResourceId(), registered.getExpiration());
