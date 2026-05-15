@@ -28,7 +28,7 @@ public class BroadcastEventUseCase {
         }
 
         try {
-            String payload = objectMapper.writeValueAsString(notification);
+            String payload = (notification instanceof String) ? (String) notification : objectMapper.writeValueAsString(notification);
             for (Session session : sessions) {
                 if (session.isOpen()) {
                     session.getAsyncRemote().sendText(payload, result -> {
