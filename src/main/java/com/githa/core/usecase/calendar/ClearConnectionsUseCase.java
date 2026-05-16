@@ -1,6 +1,6 @@
 package com.githa.core.usecase.calendar;
 
-import com.githa.entrypoint.websocket.AppointmentSessionRegistry;
+import com.githa.entrypoint.websocket.WebSocketSessionRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ClearConnectionsUseCase {
 
-    private final AppointmentSessionRegistry sessionRegistry;
+    private final WebSocketSessionRegistry sessionRegistry;
 
     public void execute() {
         log.info("Executing use case to clear all active connections");

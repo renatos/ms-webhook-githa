@@ -1,7 +1,7 @@
 package com.githa.core.usecase.calendar;
 
 import com.githa.core.domain.CalendarUpdateNotification;
-import com.githa.entrypoint.websocket.AppointmentSessionRegistry;
+import com.githa.entrypoint.websocket.WebSocketSessionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.websocket.RemoteEndpoint;
 import jakarta.websocket.Session;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 class BroadcastEventUseCaseTest {
 
     @Mock
-    AppointmentSessionRegistry sessionRegistry;
+    WebSocketSessionRegistry sessionRegistry;
 
     @Mock
     ObjectMapper objectMapper;

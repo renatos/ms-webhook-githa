@@ -14,10 +14,10 @@ import java.util.Set;
  */
 @Slf4j
 @ApplicationScoped
-public class AppointmentWebSocketBroadcaster {
+public class WebSocketBroadcaster {
 
     @Inject
-    AppointmentSessionRegistry sessionRegistry;
+    WebSocketSessionRegistry sessionRegistry;
 
     @Inject
     ObjectMapper objectMapper;
