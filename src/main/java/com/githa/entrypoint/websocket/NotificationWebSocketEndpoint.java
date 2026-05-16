@@ -38,11 +38,18 @@ public class NotificationWebSocketEndpoint {
             log.info("WebSocket session {} authorized for user {} in account group {}", 
                     session.getId(), identity.getLogin(), identity.getAccountGroupId());
         } catch (SecurityException e) {
-            log.warn("Invalid token for WebSocket connection: session={}. Error: {}", session.getId(), e.getMessage());
+            log.warn("Unauthorized WebSocket connection attempt: session={}. Error: {}", session.getId(), e.getMessage());
             try {
                 session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, e.getMessage()));
             } catch (Exception closeEx) {
                 log.error("Error closing session: {}", closeEx.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error in WebSocket onOpen: session={}", session.getId(), e);
+            try {
+                session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Internal error"));
+            } catch (Exception closeEx) {
+                // ignore
             }
         }
     }
