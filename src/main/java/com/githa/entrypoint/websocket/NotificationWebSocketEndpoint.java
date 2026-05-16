@@ -1,5 +1,6 @@
 package com.githa.entrypoint.websocket;
 
+import com.githa.core.domain.SessionIdentity;
 import com.githa.core.usecase.auth.ValidateSessionUseCase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -9,16 +10,16 @@ import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * WebSocket endpoint for real-time appointment updates.
+ * WebSocket endpoint for real-time notifications.
  * Clients connect with their JWT token to receive updates for their account group.
  */
 @Slf4j
-@ServerEndpoint("/ws/appointments/{token}")
+@ServerEndpoint("/ws/notifications/{token}")
 @ApplicationScoped
-public class AppointmentWebSocketEndpoint {
+public class NotificationWebSocketEndpoint {
 
     @Inject
-    AppointmentSessionRegistry sessionRegistry;
+    WebSocketSessionRegistry sessionRegistry;
 
     @Inject
     ValidateSessionUseCase validateSessionUseCase;
@@ -28,13 +29,14 @@ public class AppointmentWebSocketEndpoint {
         log.info("New WebSocket connection attempt: session={}", session.getId());
 
         try {
-            Long accountGroupId = validateSessionUseCase.execute(token);
+            SessionIdentity identity = validateSessionUseCase.execute(token);
             
-            // Store accountGroupId in session user properties for easy access on close
-            session.getUserProperties().put("accountGroupId", accountGroupId);
+            // Store identity in session user properties for easy access on close
+            session.getUserProperties().put("identity", identity);
             
-            sessionRegistry.register(accountGroupId, session);
-            log.info("WebSocket session {} authorized for account group {}", session.getId(), accountGroupId);
+            sessionRegistry.register(identity.getAccountGroupId(), session, identity.getLogin());
+            log.info("WebSocket session {} authorized for user {} in account group {}", 
+                    session.getId(), identity.getLogin(), identity.getAccountGroupId());
         } catch (SecurityException e) {
             log.warn("Invalid token for WebSocket connection: session={}. Error: {}", session.getId(), e.getMessage());
             try {
@@ -47,10 +49,10 @@ public class AppointmentWebSocketEndpoint {
 
     @OnClose
     public void onClose(Session session) {
-        Long accountGroupId = (Long) session.getUserProperties().get("accountGroupId");
-        if (accountGroupId != null) {
-            sessionRegistry.unregister(accountGroupId, session);
-            log.info("WebSocket session {} closed and unregistered", session.getId());
+        SessionIdentity identity = (SessionIdentity) session.getUserProperties().get("identity");
+        if (identity != null) {
+            sessionRegistry.unregister(identity.getAccountGroupId(), session);
+            log.info("WebSocket session {} closed and unregistered for user {}", session.getId(), identity.getLogin());
         }
     }
 
