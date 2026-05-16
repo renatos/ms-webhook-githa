@@ -68,12 +68,16 @@ public class BroadcastEventUseCase {
         
         // 1. Target specific user if login provided
         if (targetLogin != null && !targetLogin.isBlank()) {
-            sessionsToNotify.addAll(sessionRegistry.getSessionsByUser(targetLogin));
+            Set<Session> userSess = sessionRegistry.getSessionsByUser(targetLogin);
+            sessionsToNotify.addAll(userSess);
+            log.info("[Notification-WS] Sessions found for target user {}: {}", targetLogin, userSess.size());
         } 
         
         // 2. Target specific profile (role) if provided
         if (targetRole != null && !targetRole.isBlank()) {
-            sessionsToNotify.addAll(sessionRegistry.getSessionsByRole(targetRole));
+            Set<Session> roleSess = sessionRegistry.getSessionsByRole(targetRole);
+            sessionsToNotify.addAll(roleSess);
+            log.info("[Notification-WS] Sessions found for target role {}: {}", targetRole, roleSess.size());
         }
 
         // 3. Target account group if provided (future use)
@@ -86,11 +90,6 @@ public class BroadcastEventUseCase {
             sessionsToNotify.addAll(sessionRegistry.getAllSessions());
             log.info("[Notification-WS-{}] Global broadcast to {} sessions", type, sessionsToNotify.size());
         }
-
-        // 5. Always include ADMIN group (1L) for monitoring (if it exists)
-        sessionsToNotify.addAll(sessionRegistry.getSessions(1L));
-        // Also include anyone with "ADMIN" role specifically
-        sessionsToNotify.addAll(sessionRegistry.getSessionsByRole("ADMIN"));
 
         if (sessionsToNotify.isEmpty()) {
             return;

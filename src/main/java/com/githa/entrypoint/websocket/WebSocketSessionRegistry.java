@@ -33,7 +33,7 @@ public class WebSocketSessionRegistry {
         userSessions.computeIfAbsent(login, k -> new CopyOnWriteArraySet<>()).add(session);
         
         if (roles != null) {
-            roles.forEach(role -> roleSessions.computeIfAbsent(role, k -> new CopyOnWriteArraySet<>()).add(session));
+            roles.forEach(role -> roleSessions.computeIfAbsent(role.toUpperCase(), k -> new CopyOnWriteArraySet<>()).add(session));
         }
         
         SessionIdentity identity = SessionIdentity.builder()
