@@ -24,7 +24,7 @@ public class InternalBroadcastController {
     @Produces(MediaType.APPLICATION_JSON)
     @RunOnVirtualThread
     public Response broadcast(BroadcastRequest request) {
-        log.info("Received internal broadcast request for account group {}", request.getAccountGroupId());
+        log.info("[Notification-BROADCAST] Received internal broadcast request for account group {}", request.getAccountGroupId());
         
         try {
             broadcastEventUseCase.execute(request.getAccountGroupId(), request.getPayload());
@@ -38,6 +38,6 @@ public class InternalBroadcastController {
     @Data
     public static class BroadcastRequest {
         private Long accountGroupId;
-        private String payload;
+        private Object payload;
     }
 }

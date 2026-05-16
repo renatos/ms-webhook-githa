@@ -56,5 +56,4 @@ volumes:
 
 networks:
   githa-network:
-    name: githa-network
-    driver: bridge
+    external: true
