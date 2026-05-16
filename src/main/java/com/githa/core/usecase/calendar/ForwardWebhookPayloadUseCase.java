@@ -13,7 +13,7 @@ public class ForwardWebhookPayloadUseCase {
     private final CoreBackendGateway coreBackendGateway;
 
     public void execute(String channelId) {
-        log.info("Forwarding validated webhook payload for channelId: {}", channelId);
+        log.info("[Notification-CALENDAR] Forwarding validated webhook payload for channelId: {}", channelId);
         try {
             coreBackendGateway.forwardCalendarWebhook(channelId);
             log.info("Successfully forwarded webhook payload for channelId: {} to core backend", channelId);

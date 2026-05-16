@@ -36,7 +36,7 @@ public class GoogleCalendarWebhookController {
             @HeaderParam("X-Goog-Message-Number") String messageNumber,
             @HeaderParam("X-Goog-Resource-URI") String resourceUri) {
 
-        log.info("Received Google Calendar webhook. ChannelId: {}, ResourceState: {}, ResourceId: {}, MessageNumber: {}, ResourceUri: {}", 
+        log.info("[Notification-CALENDAR] Received Google Calendar webhook. ChannelId: {}, ResourceState: {}, ResourceId: {}, MessageNumber: {}, ResourceUri: {}", 
                 channelId, resourceState, resourceId, messageNumber, resourceUri);
 
         try {
@@ -45,7 +45,7 @@ public class GoogleCalendarWebhookController {
 
             // 2. Handle resource state
             if ("sync".equalsIgnoreCase(resourceState)) {
-                log.info("Channel registration confirmation for {}", channelId);
+                log.info("[Notification-CALENDAR] Channel registration confirmation for {}", channelId);
                 return Response.ok().build();
             }
 
@@ -61,7 +61,7 @@ public class GoogleCalendarWebhookController {
             log.warn("Unauthorized webhook attempt: {}", e.getMessage());
             return Response.status(Response.Status.UNAUTHORIZED).build();
         } catch (Exception e) {
-            log.error("Failed to process inbound sync for channel {}: {}", channelId, e.getMessage());
+            log.error("[Notification-CALENDAR] Failed to process inbound sync for channel {}: {}", channelId, e.getMessage());
             // We still return 200 so Google doesn't keep retrying the notification 
             // if it's a processing error (it's already validated)
             return Response.ok().build();
