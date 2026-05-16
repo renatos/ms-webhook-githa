@@ -9,6 +9,9 @@ import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * WebSocket endpoint for real-time notifications.
  * Clients connect with their JWT token to receive updates for their account group.
@@ -34,9 +37,11 @@ public class NotificationWebSocketEndpoint {
             // Store identity in session user properties for easy access on close
             session.getUserProperties().put("identity", identity);
             
-            sessionRegistry.register(identity.getAccountGroupId(), session, identity.getLogin());
-            log.info("WebSocket session {} authorized for user {} in account group {}", 
-                    session.getId(), identity.getLogin(), identity.getAccountGroupId());
+            Set<String> roles = identity.getRoles() != null ? new HashSet<>(identity.getRoles()) : new HashSet<>();
+            sessionRegistry.register(identity.getAccountGroupId(), session, identity.getLogin(), roles);
+
+            log.info("WebSocket session {} authorized for user {} with roles {}", 
+                    session.getId(), identity.getLogin(), roles);
         } catch (SecurityException e) {
             log.warn("Unauthorized WebSocket connection attempt: session={}. Error: {}", session.getId(), e.getMessage());
             try {

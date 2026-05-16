@@ -24,10 +24,11 @@ public class InternalBroadcastController {
     @Produces(MediaType.APPLICATION_JSON)
     @RunOnVirtualThread
     public Response broadcast(BroadcastRequest request) {
-        log.info("[Notification-BROADCAST] Received internal broadcast request for account group {}", request.getAccountGroupId());
+        log.info("[Notification-BROADCAST] Received internal broadcast request for account group {}, role {}", 
+                request.getAccountGroupId(), request.getTargetRole());
         
         try {
-            broadcastEventUseCase.execute(request.getAccountGroupId(), request.getPayload());
+            broadcastEventUseCase.execute(request.getAccountGroupId(), request.getTargetLogin(), request.getTargetRole(), request.getPayload());
             return Response.ok().build();
         } catch (Exception e) {
             log.error("Failed to execute internal broadcast", e);
@@ -38,6 +39,8 @@ public class InternalBroadcastController {
     @Data
     public static class BroadcastRequest {
         private Long accountGroupId;
+        private String targetLogin;
+        private String targetRole;
         private Object payload;
     }
 }

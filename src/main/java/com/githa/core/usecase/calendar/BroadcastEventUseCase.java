@@ -8,6 +8,7 @@ import jakarta.websocket.Session;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,7 +25,7 @@ public class BroadcastEventUseCase {
     private final Map<String, Long> deduplicationCache = new ConcurrentHashMap<>();
     private static final long DEDUPLICATION_WINDOW_MS = 10000;
 
-    public void execute(Long accountGroupId, Object notification) {
+    public void execute(Long accountGroupId, String targetLogin, String targetRole, Object notification) {
         String tempPayload;
         String tempType = "UNKNOWN";
         String eventId = null;
@@ -35,39 +36,24 @@ public class BroadcastEventUseCase {
             
             com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(tempPayload);
             if (node.has("type")) {
-                String fullType = node.get("type").asText();
-                tempType = fullType;
-                
-                // Try to extract eventId and action for deduplication
-                // Handling both root-level and nested 'data' level
+                tempType = node.get("type").asText();
                 com.fasterxml.jackson.databind.JsonNode dataNode = node.has("data") ? node.get("data") : node;
-                
                 if (dataNode.has("eventId")) eventId = dataNode.get("eventId").asText();
                 if (dataNode.has("action")) action = dataNode.get("action").asText();
                 if (dataNode.has("appointmentId") && eventId == null) eventId = dataNode.get("appointmentId").asText();
             }
             
-            // Deduplication Logic
             if (eventId != null && action != null) {
-                String dedupKey = String.format("%s:%s:%s:%s", accountGroupId, tempType, eventId, action);
+                String dedupKey = String.format("%s:%s:%s:%s:%s:%s", accountGroupId, targetLogin, targetRole, tempType, eventId, action);
                 long now = System.currentTimeMillis();
-                
                 if (deduplicationCache.containsKey(dedupKey) && deduplicationCache.get(dedupKey) > now) {
-                    log.info("[Notification-DEDUP] Skipping duplicate {} notification for event {} in group {}", 
-                            tempType, eventId, accountGroupId);
                     return;
                 }
-                
                 deduplicationCache.put(dedupKey, now + DEDUPLICATION_WINDOW_MS);
-                
-                // Periodic cleanup of the cache (simple approach)
-                if (deduplicationCache.size() > 1000) {
-                    deduplicationCache.entrySet().removeIf(entry -> entry.getValue() < now);
-                }
             }
 
         } catch (Exception e) {
-            log.error("[Notification-WS] Failed to process message for logging or dedup", e);
+            log.error("[Notification-WS] Process error", e);
             try {
                 tempPayload = (notification instanceof String) ? (String) notification : objectMapper.writeValueAsString(notification);
             } catch (Exception ex) {
@@ -78,25 +64,49 @@ public class BroadcastEventUseCase {
         final String payload = tempPayload;
         final String type = tempType;
 
-        log.info("[Notification-WS-{}] Broadcasting update to account group {}", type, accountGroupId);
+        Set<Session> sessionsToNotify = new HashSet<>();
         
-        Set<Session> sessions = sessionRegistry.getSessions(accountGroupId);
-        if (sessions.isEmpty()) {
-            log.info("[Notification-WS-{}] No active sessions for account group {}", type, accountGroupId);
+        // 1. Target specific user if login provided
+        if (targetLogin != null && !targetLogin.isBlank()) {
+            sessionsToNotify.addAll(sessionRegistry.getSessionsByUser(targetLogin));
+        } 
+        
+        // 2. Target specific profile (role) if provided
+        if (targetRole != null && !targetRole.isBlank()) {
+            sessionsToNotify.addAll(sessionRegistry.getSessionsByRole(targetRole));
+        }
+
+        // 3. Target account group if provided (future use)
+        if (sessionsToNotify.isEmpty() && accountGroupId != null && accountGroupId > 0) {
+            sessionsToNotify.addAll(sessionRegistry.getSessions(accountGroupId));
+        }
+
+        // 4. Fallback to Global if no target specified
+        if (sessionsToNotify.isEmpty() && (targetLogin == null || targetLogin.isBlank()) && (targetRole == null || targetRole.isBlank())) {
+            sessionsToNotify.addAll(sessionRegistry.getAllSessions());
+            log.info("[Notification-WS-{}] Global broadcast to {} sessions", type, sessionsToNotify.size());
+        }
+
+        // 5. Always include ADMIN group (1L) for monitoring (if it exists)
+        sessionsToNotify.addAll(sessionRegistry.getSessions(1L));
+        // Also include anyone with "ADMIN" role specifically
+        sessionsToNotify.addAll(sessionRegistry.getSessionsByRole("ADMIN"));
+
+        if (sessionsToNotify.isEmpty()) {
             return;
         }
 
-        for (Session session : sessions) {
+        log.info("[Notification-WS-{}] Sending to {} sessions (TargetUser: {}, TargetRole: {})", 
+                type, sessionsToNotify.size(), targetLogin, targetRole);
+
+        for (Session session : sessionsToNotify) {
             if (session.isOpen()) {
                 session.getAsyncRemote().sendText(payload, result -> {
                     if (!result.isOK()) {
-                        log.warn("[Notification-WS-{}] Failed to send message to session {}: {}. Unregistering.", 
+                        log.warn("[Notification-WS-{}] Send failed to session {}: {}", 
                                 type, session.getId(), result.getException().getMessage());
-                        sessionRegistry.unregister(accountGroupId, session);
                     }
                 });
-            } else {
-                sessionRegistry.unregister(accountGroupId, session);
             }
         }
     }

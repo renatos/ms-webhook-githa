@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.time.LocalDateTime;
 
 /**
@@ -18,5 +19,6 @@ public class SessionIdentity {
     private String sessionId;
     private String login;
     private Long accountGroupId;
+    private List<String> roles;
     private LocalDateTime connectedAt;
 }
