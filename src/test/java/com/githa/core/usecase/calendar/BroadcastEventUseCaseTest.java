@@ -78,7 +78,7 @@ class BroadcastEventUseCaseTest {
             return null;
         }).when(failingRemote).sendText(anyString(), any());
 
-        broadcastUseCase.execute(accountGroupId, notification);
+        broadcastUseCase.execute(accountGroupId, null, null, notification);
 
         verify(successfulRemote).sendText(anyString(), any());
         verify(failingRemote).sendText(anyString(), any());

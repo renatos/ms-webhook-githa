@@ -35,7 +35,7 @@ class WebSocketSessionRegistryTest {
         when(session.getId()).thenReturn(sessionId);
 
         // When
-        registry.register(groupId, session, login);
+        registry.register(groupId, session, login, java.util.Set.of());
 
         // Then
         assertTrue(registry.getSessions(groupId).contains(session));
@@ -52,7 +52,7 @@ class WebSocketSessionRegistryTest {
         String login = "user@test.com";
         String sessionId = "sess-1";
         when(session.getId()).thenReturn(sessionId);
-        registry.register(groupId, session, login);
+        registry.register(groupId, session, login, java.util.Set.of());
 
         // When
         registry.unregister(groupId, session);
@@ -67,7 +67,7 @@ class WebSocketSessionRegistryTest {
         // Given
         when(session.getId()).thenReturn("sess-1");
         when(session.isOpen()).thenReturn(true);
-        registry.register(1L, session, "user1");
+        registry.register(1L, session, "user1", java.util.Set.of());
         
         // When
         registry.clearAll();

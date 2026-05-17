@@ -46,8 +46,8 @@ class BroadcastEventUseCaseDedupTest {
         when(sessionRegistry.getSessions(accountGroupId)).thenReturn(Set.of(session));
 
         // When - Call twice
-        useCase.execute(accountGroupId, notification);
-        useCase.execute(accountGroupId, notification);
+        useCase.execute(accountGroupId, null, null, notification);
+        useCase.execute(accountGroupId, null, null, notification);
 
         // Then
         verify(asyncRemote, times(1)).sendText(anyString(), any());
@@ -62,10 +62,25 @@ class BroadcastEventUseCaseDedupTest {
         when(sessionRegistry.getSessions(accountGroupId)).thenReturn(Set.of(session));
 
         // When
-        useCase.execute(accountGroupId, notif1);
-        useCase.execute(accountGroupId, notif2);
+        useCase.execute(accountGroupId, null, null, notif1);
+        useCase.execute(accountGroupId, null, null, notif2);
 
         // Then
         verify(asyncRemote, times(2)).sendText(anyString(), any());
+    }
+
+    @Test
+    void shouldDeduplicateWhatsAppNotifications() {
+        // Given
+        Long accountGroupId = 1L;
+        String notification = "{\"type\":\"WHATSAPP_NOTIFICATION\",\"appointmentId\":1438,\"data\":{\"status\":\"SENT\"}}";
+        when(sessionRegistry.getSessions(accountGroupId)).thenReturn(Set.of(session));
+
+        // When - Call twice
+        useCase.execute(accountGroupId, null, null, notification);
+        useCase.execute(accountGroupId, null, null, notification);
+
+        // Then
+        verify(asyncRemote, times(1)).sendText(anyString(), any());
     }
 }

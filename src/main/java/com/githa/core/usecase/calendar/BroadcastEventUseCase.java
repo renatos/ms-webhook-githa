@@ -40,16 +40,40 @@ public class BroadcastEventUseCase {
                 com.fasterxml.jackson.databind.JsonNode dataNode = node.has("data") ? node.get("data") : node;
                 if (dataNode.has("eventId")) eventId = dataNode.get("eventId").asText();
                 if (dataNode.has("action")) action = dataNode.get("action").asText();
-                if (dataNode.has("appointmentId") && eventId == null) eventId = dataNode.get("appointmentId").asText();
+                
+                if (eventId == null) {
+                    if (node.has("appointmentId")) {
+                        eventId = node.get("appointmentId").asText();
+                    } else if (dataNode.has("appointmentId")) {
+                        eventId = dataNode.get("appointmentId").asText();
+                    }
+                }
             }
             
-            if (eventId != null && action != null) {
-                String dedupKey = String.format("%s:%s:%s:%s:%s:%s", accountGroupId, targetLogin, targetRole, tempType, eventId, action);
+            // Deduplicate based on type + appointmentId/eventId + action/status
+            String dedupIdentifier = eventId;
+            String dedupAction = action;
+            if (dedupAction == null && node.has("data") && node.get("data").has("status")) {
+                dedupAction = node.get("data").get("status").asText();
+            }
+
+            if (dedupIdentifier != null) {
+                String dedupKey = String.format("%s:%s:%s:%s:%s:%s", 
+                        accountGroupId, 
+                        targetLogin != null ? targetLogin : "", 
+                        targetRole != null ? targetRole : "", 
+                        tempType, 
+                        dedupIdentifier, 
+                        dedupAction != null ? dedupAction : "");
                 long now = System.currentTimeMillis();
                 if (deduplicationCache.containsKey(dedupKey) && deduplicationCache.get(dedupKey) > now) {
+                    log.info("[Notification-WS] Deduplicated duplicate message of type {} for key {}", tempType, dedupKey);
                     return;
                 }
                 deduplicationCache.put(dedupKey, now + DEDUPLICATION_WINDOW_MS);
+
+                // Housekeeping: remove expired entries (older than 10 seconds)
+                deduplicationCache.entrySet().removeIf(entry -> entry.getValue() <= now);
             }
 
         } catch (Exception e) {
@@ -104,6 +128,9 @@ public class BroadcastEventUseCase {
                     if (!result.isOK()) {
                         log.warn("[Notification-WS-{}] Send failed to session {}: {}", 
                                 type, session.getId(), result.getException().getMessage());
+                        if (accountGroupId != null) {
+                            sessionRegistry.unregister(accountGroupId, session);
+                        }
                     }
                 });
             }
