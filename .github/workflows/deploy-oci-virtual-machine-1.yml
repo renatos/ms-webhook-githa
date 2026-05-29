@@ -149,9 +149,9 @@ jobs:
             GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
-            APP_WEBHOOK_BASE_URL=${{ secrets.APP_WEBHOOK_BASE_URL }}
+            GITHA_WEBHOOK_BASE_URL=${{ secrets.GITHA_WEBHOOK_BASE_URL }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            GITHA_ENCRYPTION_KEY=${{ secrets.GITHA_ENCRYPTION_KEY }}
+            GITHA_WEBHOOK_API_KEY=${{ secrets.GITHA_WEBHOOK_API_KEY }}
             GITHA_CORE_URL=http://githa-backend:8080
             OCIR_REGISTRY=${{ env.OCIR_REGISTRY }}
             OCIR_NAMESPACE=${{ env.OCIR_NAMESPACE }}
@@ -201,9 +201,9 @@ jobs:
             GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
-            APP_WEBHOOK_BASE_URL=${{ secrets.APP_WEBHOOK_BASE_URL }}
+            GITHA_WEBHOOK_BASE_URL=${{ secrets.GITHA_WEBHOOK_BASE_URL }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            GITHA_ENCRYPTION_KEY=${{ secrets.GITHA_ENCRYPTION_KEY }}
+            GITHA_WEBHOOK_API_KEY=${{ secrets.GITHA_WEBHOOK_API_KEY }}
             GITHA_CORE_URL=http://githa-backend:8080
             OCIR_REGISTRY=${{ env.OCIR_REGISTRY }}
             OCIR_NAMESPACE=${{ env.OCIR_NAMESPACE }}
