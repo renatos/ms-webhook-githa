@@ -47,7 +47,7 @@ class RegisterWebhookChannelUseCaseTest {
 
         when(webhookChannelGateway.findActiveByUserEmail(USER_EMAIL)).thenReturn(Optional.of(existingChannel));
 
-        CalendarWebhookChannel result = registerWebhookChannelUseCase.execute(ACCESS_TOKEN, USER_EMAIL);
+        CalendarWebhookChannel result = registerWebhookChannelUseCase.execute(ACCESS_TOKEN, USER_EMAIL, false);
 
         assertEquals("existing-id", result.getChannelId());
         verifyNoInteractions(calendarWebhookGateway);
@@ -66,9 +66,36 @@ class RegisterWebhookChannelUseCaseTest {
                 .thenReturn(newChannel);
         when(webhookChannelGateway.save(newChannel)).thenReturn(newChannel);
 
-        CalendarWebhookChannel result = registerWebhookChannelUseCase.execute(ACCESS_TOKEN, USER_EMAIL);
+        CalendarWebhookChannel result = registerWebhookChannelUseCase.execute(ACCESS_TOKEN, USER_EMAIL, false);
 
         assertEquals("new-id", result.getChannelId());
+        verify(calendarWebhookGateway).registerChannel(ACCESS_TOKEN, USER_EMAIL, WEBHOOK_BASE_URL);
+        verify(webhookChannelGateway).save(newChannel);
+    }
+
+    @Test
+    void shouldRecreateChannelIfForceRegistration() {
+        CalendarWebhookChannel existingChannel = CalendarWebhookChannel.builder()
+                .channelId("existing-id")
+                .resourceId("res-id")
+                .userEmail(USER_EMAIL)
+                .build();
+
+        CalendarWebhookChannel newChannel = CalendarWebhookChannel.builder()
+                .channelId("new-id")
+                .userEmail(USER_EMAIL)
+                .build();
+
+        when(webhookChannelGateway.findActiveByUserEmail(USER_EMAIL)).thenReturn(Optional.of(existingChannel));
+        when(calendarWebhookGateway.registerChannel(eq(ACCESS_TOKEN), eq(USER_EMAIL), eq(WEBHOOK_BASE_URL)))
+                .thenReturn(newChannel);
+        when(webhookChannelGateway.save(newChannel)).thenReturn(newChannel);
+
+        CalendarWebhookChannel result = registerWebhookChannelUseCase.execute(ACCESS_TOKEN, USER_EMAIL, true);
+
+        assertEquals("new-id", result.getChannelId());
+        verify(calendarWebhookGateway).stopChannel("existing-id", "res-id", ACCESS_TOKEN);
+        verify(webhookChannelGateway).deleteByChannelId("existing-id");
         verify(calendarWebhookGateway).registerChannel(ACCESS_TOKEN, USER_EMAIL, WEBHOOK_BASE_URL);
         verify(webhookChannelGateway).save(newChannel);
     }

@@ -25,16 +25,26 @@ public class RegisterWebhookChannelUseCase {
     @ConfigProperty(name = "app.webhook.base-url")
     String webhookBaseUrl;
 
-    public CalendarWebhookChannel execute(String accessToken, String userEmail) {
+    public CalendarWebhookChannel execute(String accessToken, String userEmail, boolean force) {
         log.info("Checking for existing active webhook channel for user {}", userEmail);
         
         Optional<CalendarWebhookChannel> activeChannel = webhookChannelGateway.findActiveByUserEmail(userEmail);
         if (activeChannel.isPresent()) {
-            log.info("Active channel already exists for user {}: {}", userEmail, activeChannel.get().getChannelId());
-            return activeChannel.get();
+            if (!force) {
+                log.info("Active channel already exists for user {}: {}", userEmail, activeChannel.get().getChannelId());
+                return activeChannel.get();
+            }
+            
+            log.info("Force registration requested. Stopping existing channel: {}", activeChannel.get().getChannelId());
+            try {
+                calendarWebhookGateway.stopChannel(activeChannel.get().getChannelId(), activeChannel.get().getResourceId(), accessToken);
+                webhookChannelGateway.deleteByChannelId(activeChannel.get().getChannelId());
+            } catch (Exception e) {
+                log.warn("Failed to stop existing channel during force registration: {}", e.getMessage());
+            }
         }
 
-        log.info("No active channel found. Registering new channel for user {}", userEmail);
+        log.info("Registering new channel for user {}", userEmail);
         CalendarWebhookChannel newChannel = calendarWebhookGateway.registerChannel(accessToken, userEmail, webhookBaseUrl);
         
         return webhookChannelGateway.save(newChannel);

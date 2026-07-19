@@ -38,7 +38,8 @@ public class InternalWebhookController {
     public Response register(WebhookRegistrationRequest request) {
         log.info("Received internal request to register webhook for user {}", request.getUserEmail());
         try {
-            CalendarWebhookChannel channel = registerUseCase.execute(request.getAccessToken(), request.getUserEmail());
+            boolean force = request.getForce() != null && request.getForce();
+            CalendarWebhookChannel channel = registerUseCase.execute(request.getAccessToken(), request.getUserEmail(), force);
             log.info("Webhook channel registered successfully for user {}: channelId={}", 
                     request.getUserEmail(), channel.getChannelId());
             return Response.ok(channel).build();
@@ -85,6 +86,7 @@ public class InternalWebhookController {
     public static class WebhookRegistrationRequest {
         private String accessToken;
         private String userEmail;
+        private Boolean force;
     }
 
     @Data
