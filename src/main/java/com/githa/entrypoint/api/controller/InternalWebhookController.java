@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 /**
  * Internal controller to manage webhooks for the main monolith.
@@ -36,7 +37,10 @@ public class InternalWebhookController {
     @Produces(MediaType.APPLICATION_JSON)
     @RunOnVirtualThread
     public Response register(WebhookRegistrationRequest request) {
-        log.info("Received internal request to register webhook for user {}", request.getUserEmail());
+        if (request != null && request.getUserEmail() != null) {
+            MDC.put("login", request.getUserEmail());
+        }
+        log.info("Received internal request to register webhook for user {}", request != null ? request.getUserEmail() : "null");
         try {
             boolean force = request.getForce() != null && request.getForce();
             CalendarWebhookChannel channel = registerUseCase.execute(request.getAccessToken(), request.getUserEmail(), force);
@@ -53,6 +57,8 @@ public class InternalWebhookController {
                             "error", root.getClass().getSimpleName(),
                             "message", root.getMessage() != null ? root.getMessage() : "Unknown error"))
                     .build();
+        } finally {
+            MDC.remove("login");
         }
     }
 
@@ -62,13 +68,18 @@ public class InternalWebhookController {
     @Produces(MediaType.APPLICATION_JSON)
     @RunOnVirtualThread
     public Response stop(WebhookStopRequest request) {
-        log.info("Received internal request to stop webhook for user {}", request.getUserEmail());
+        if (request != null && request.getUserEmail() != null) {
+            MDC.put("login", request.getUserEmail());
+        }
+        log.info("Received internal request to stop webhook for user {}", request != null ? request.getUserEmail() : "null");
         try {
             stopUseCase.execute(request.getUserEmail(), request.getAccessToken());
             return Response.noContent().build();
         } catch (Exception e) {
             log.error("Failed to stop webhook", e);
             return Response.serverError().entity(e.getMessage()).build();
+        } finally {
+            MDC.remove("login");
         }
     }
 

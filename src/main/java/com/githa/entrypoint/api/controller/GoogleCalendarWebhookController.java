@@ -10,6 +10,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 /**
  * Public controller to receive Google Calendar webhook notifications.
@@ -42,6 +43,9 @@ public class GoogleCalendarWebhookController {
         try {
             // 1. Validate channel and token
             CalendarWebhookChannel channel = validateWebhookUseCase.execute(channelId, channelToken);
+            if (channel != null && channel.getUserEmail() != null) {
+                MDC.put("login", channel.getUserEmail());
+            }
 
             // 2. Handle resource state
             if ("sync".equalsIgnoreCase(resourceState)) {
@@ -65,6 +69,8 @@ public class GoogleCalendarWebhookController {
             // We still return 200 so Google doesn't keep retrying the notification 
             // if it's a processing error (it's already validated)
             return Response.ok().build();
+        } finally {
+            MDC.remove("login");
         }
     }
 }

@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 @Slf4j
 @Path("/internal/events")
@@ -24,8 +25,11 @@ public class InternalBroadcastController {
     @Produces(MediaType.APPLICATION_JSON)
     @RunOnVirtualThread
     public Response broadcast(BroadcastRequest request) {
+        if (request != null && request.getTargetLogin() != null) {
+            MDC.put("login", request.getTargetLogin());
+        }
         log.info("[Notification-BROADCAST] Received internal broadcast request for account group {}, role {}", 
-                request.getAccountGroupId(), request.getTargetRole());
+                request != null ? request.getAccountGroupId() : "null", request != null ? request.getTargetRole() : "null");
         
         try {
             broadcastEventUseCase.execute(request.getAccountGroupId(), request.getTargetLogin(), request.getTargetRole(), request.getPayload());
@@ -33,6 +37,8 @@ public class InternalBroadcastController {
         } catch (Exception e) {
             log.error("Failed to execute internal broadcast", e);
             return Response.serverError().entity(e.getMessage()).build();
+        } finally {
+            MDC.remove("login");
         }
     }
 

@@ -8,6 +8,7 @@ import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +34,9 @@ public class NotificationWebSocketEndpoint {
 
         try {
             SessionIdentity identity = validateSessionUseCase.execute(token);
+            if (identity != null) {
+                MDC.put("login", identity.getLogin());
+            }
             
             // Store identity in session user properties for easy access on close
             session.getUserProperties().put("identity", identity);
@@ -56,27 +60,52 @@ public class NotificationWebSocketEndpoint {
             } catch (Exception closeEx) {
                 // ignore
             }
+        } finally {
+            MDC.remove("login");
         }
     }
 
     @OnClose
     public void onClose(Session session) {
-        SessionIdentity identity = (SessionIdentity) session.getUserProperties().get("identity");
+        SessionIdentity identity = session != null ? (SessionIdentity) session.getUserProperties().get("identity") : null;
         if (identity != null) {
-            sessionRegistry.unregister(identity.getAccountGroupId(), session);
-            log.info("WebSocket session {} closed and unregistered for user {}", session.getId(), identity.getLogin());
+            MDC.put("login", identity.getLogin());
+        }
+        try {
+            if (identity != null) {
+                sessionRegistry.unregister(identity.getAccountGroupId(), session);
+                log.info("WebSocket session {} closed and unregistered for user {}", session.getId(), identity.getLogin());
+            }
+        } finally {
+            MDC.remove("login");
         }
     }
 
     @OnError
     public void onError(Session session, Throwable throwable) {
-        log.error("WebSocket error for session {}: {}", session.getId(), throwable.getMessage());
-        onClose(session);
+        SessionIdentity identity = session != null ? (SessionIdentity) session.getUserProperties().get("identity") : null;
+        if (identity != null) {
+            MDC.put("login", identity.getLogin());
+        }
+        try {
+            log.error("WebSocket error for session {}: {}", session != null ? session.getId() : "null", throwable != null ? throwable.getMessage() : "null");
+            onClose(session);
+        } finally {
+            MDC.remove("login");
+        }
     }
 
     @OnMessage
     public void onMessage(String message, Session session) {
-        // We handle only inbound notifications typically, but clients might send heartbeats
-        log.debug("Received WebSocket message from session {}: {}", session.getId(), message);
+        SessionIdentity identity = session != null ? (SessionIdentity) session.getUserProperties().get("identity") : null;
+        if (identity != null) {
+            MDC.put("login", identity.getLogin());
+        }
+        try {
+            // We handle only inbound notifications typically, but clients might send heartbeats
+            log.debug("Received WebSocket message from session {}: {}", session != null ? session.getId() : "null", message);
+        } finally {
+            MDC.remove("login");
+        }
     }
 }
