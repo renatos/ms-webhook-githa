@@ -42,7 +42,7 @@ public class NotificationWebSocketEndpoint {
             session.getUserProperties().put("identity", identity);
             
             Set<String> roles = identity.getRoles() != null ? new HashSet<>(identity.getRoles()) : new HashSet<>();
-            sessionRegistry.register(identity.getAccountGroupId(), session, identity.getLogin(), roles);
+            sessionRegistry.register(identity, session);
 
             log.info("WebSocket session {} authorized for user {} with roles {}", 
                     session.getId(), identity.getLogin(), roles);
@@ -102,10 +102,13 @@ public class NotificationWebSocketEndpoint {
             MDC.put("login", identity.getLogin());
         }
         try {
-            // We handle only inbound notifications typically, but clients might send heartbeats
             log.debug("Received WebSocket message from session {}: {}", session != null ? session.getId() : "null", message);
+            if (message != null && (message.contains("PONG") || message.contains("pong"))) {
+                log.trace("Received PONG heartbeat from session {}", session != null ? session.getId() : "null");
+            }
         } finally {
             MDC.remove("login");
         }
     }
+
 }

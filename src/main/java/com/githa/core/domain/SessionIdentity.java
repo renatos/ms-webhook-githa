@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Domain model representing the identity and metadata of an active WebSocket session.
@@ -21,4 +22,6 @@ public class SessionIdentity {
     private Long accountGroupId;
     private List<String> roles;
     private LocalDateTime connectedAt;
+    private Instant expiresAt;
 }
+

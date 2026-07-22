@@ -37,14 +37,17 @@ public class JwtTokenValidationGatewayImpl implements TokenValidationGateway {
             log.info("Token validated for user: {} (Group: {})", email, accountGroupId);
             
             java.util.Set<String> groups = jwt.getGroups();
+            java.time.Instant expiresAt = jwt.getExpirationTime() > 0 ? java.time.Instant.ofEpochSecond(jwt.getExpirationTime()) : null;
 
             return Optional.of(SessionIdentity.builder()
                     .login(email)
                     .accountGroupId(accountGroupId)
                     .roles(groups != null ? new java.util.ArrayList<>(groups) : new java.util.ArrayList<>())
                     .connectedAt(LocalDateTime.now())
+                    .expiresAt(expiresAt)
                     .build());
         } catch (Exception e) {
+
             log.warn("JWT validation failed via SmallRye Parser: {}", e.getMessage());
             return Optional.empty();
         }

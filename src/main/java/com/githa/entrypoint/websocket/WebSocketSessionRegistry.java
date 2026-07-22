@@ -29,13 +29,6 @@ public class WebSocketSessionRegistry {
     private final Map<String, SessionIdentity> sessionIdentities = new ConcurrentHashMap<>();
 
     public void register(Long accountGroupId, Session session, String login, Set<String> roles) {
-        accountSessions.computeIfAbsent(accountGroupId, k -> new CopyOnWriteArraySet<>()).add(session);
-        userSessions.computeIfAbsent(login, k -> new CopyOnWriteArraySet<>()).add(session);
-        
-        if (roles != null) {
-            roles.forEach(role -> roleSessions.computeIfAbsent(role.toUpperCase(), k -> new CopyOnWriteArraySet<>()).add(session));
-        }
-        
         SessionIdentity identity = SessionIdentity.builder()
                 .sessionId(session.getId())
                 .login(login)
@@ -43,12 +36,26 @@ public class WebSocketSessionRegistry {
                 .roles(roles != null ? new ArrayList<>(roles) : Collections.emptyList())
                 .connectedAt(java.time.LocalDateTime.now())
                 .build();
+        register(identity, session);
+    }
+
+    public void register(SessionIdentity identity, Session session) {
+        if (identity == null || session == null) return;
+        identity.setSessionId(session.getId());
+
+        accountSessions.computeIfAbsent(identity.getAccountGroupId(), k -> new CopyOnWriteArraySet<>()).add(session);
+        userSessions.computeIfAbsent(identity.getLogin(), k -> new CopyOnWriteArraySet<>()).add(session);
+        
+        if (identity.getRoles() != null) {
+            identity.getRoles().forEach(role -> roleSessions.computeIfAbsent(role.toUpperCase(), k -> new CopyOnWriteArraySet<>()).add(session));
+        }
         
         sessionIdentities.put(session.getId(), identity);
         
         log.info("[Registry] Registered session {} for user {} with roles {}. Groups: {}, Roles: {}", 
-                session.getId(), login, roles, accountSessions.size(), roleSessions.size());
+                session.getId(), identity.getLogin(), identity.getRoles(), accountSessions.size(), roleSessions.size());
     }
+
 
     public void unregister(Long accountGroupId, Session session) {
         log.info("Unregistering WebSocket session {} for account group {}", session.getId(), accountGroupId);
