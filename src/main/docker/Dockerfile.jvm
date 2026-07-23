@@ -1,6 +1,7 @@
 FROM container-registry.oracle.com/java/openjdk:25
 
 ENV LANGUAGE='pt_BR:pt'
+ENV TZ='America/Sao_Paulo'
 
 WORKDIR /deployments
 
@@ -12,4 +13,4 @@ COPY build/quarkus-app/quarkus/ /deployments/quarkus/
 EXPOSE 8085
 USER 1001
 
-ENTRYPOINT [ "java", "-Dquarkus.http.host=0.0.0.0", "-Djava.util.logging.manager=org.jboss.logmanager.LogManager", "-jar", "/deployments/quarkus-run.jar" ]
+ENTRYPOINT [ "java", "-Duser.timezone=America/Sao_Paulo", "-Dquarkus.http.host=0.0.0.0", "-Djava.util.logging.manager=org.jboss.logmanager.LogManager", "-jar", "/deployments/quarkus-run.jar" ]
