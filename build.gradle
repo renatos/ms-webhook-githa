@@ -6,12 +6,24 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/renatos/githa-error-kit")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR") ?: ""
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN") ?: ""
+        }
+    }
 }
 
 dependencies {
     // Quarkus BOM for dependency management
     implementation platform("io.quarkus.platform:quarkus-bom:3.39.3")
     
+    // Error Handling Library (RFC 9457 & Domain Exceptions)
+    implementation 'com.githa:githa-error-core:1.0.0-SNAPSHOT'
+    implementation 'com.githa:githa-error-quarkus:1.0.0-SNAPSHOT'
+
     // Core Dependencies
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-hibernate-orm-panache'

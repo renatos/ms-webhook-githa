@@ -75,9 +75,6 @@ public class InternalWebhookController {
         try {
             stopUseCase.execute(request.getUserEmail(), request.getAccessToken());
             return Response.noContent().build();
-        } catch (Exception e) {
-            log.error("Failed to stop webhook", e);
-            return Response.serverError().entity(e.getMessage()).build();
         } finally {
             MDC.remove("login");
         }

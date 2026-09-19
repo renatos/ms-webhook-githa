@@ -53,12 +53,7 @@ public class InternalAdminController {
     @RunOnVirtualThread
     public Response clearConnections() {
         log.info("Received request to clear all connections");
-        try {
-            clearConnectionsUseCase.execute();
-            return Response.noContent().build();
-        } catch (Exception e) {
-            log.error("Failed to clear connections", e);
-            return Response.serverError().entity(e.getMessage()).build();
-        }
+        clearConnectionsUseCase.execute();
+        return Response.noContent().build();
     }
 }

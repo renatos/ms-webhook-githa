@@ -34,9 +34,6 @@ public class InternalBroadcastController {
         try {
             broadcastEventUseCase.execute(request.getAccountGroupId(), request.getTargetLogin(), request.getTargetRole(), request.getPayload());
             return Response.ok().build();
-        } catch (Exception e) {
-            log.error("Failed to execute internal broadcast", e);
-            return Response.serverError().entity(e.getMessage()).build();
         } finally {
             MDC.remove("login");
         }

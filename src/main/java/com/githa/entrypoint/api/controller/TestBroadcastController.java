@@ -28,19 +28,14 @@ public class TestBroadcastController {
         log.info("[TEST-BROADCAST] Triggering test notification. User: {}, Role: {}", 
                 request.getTargetLogin(), request.getTargetRole());
         
-        try {
-            // GroupId is optional and might not exist yet
-            Long groupId = request.getAccountGroupId();
-            
-            broadcastEventUseCase.execute(groupId, request.getTargetLogin(), request.getTargetRole(), request.getPayload());
-            
-            return Response.ok()
-                    .entity("{\"status\": \"Message sent\"}")
-                    .build();
-        } catch (Exception e) {
-            log.error("Test broadcast failed", e);
-            return Response.serverError().entity(e.getMessage()).build();
-        }
+        // GroupId is optional and might not exist yet
+        Long groupId = request.getAccountGroupId();
+        
+        broadcastEventUseCase.execute(groupId, request.getTargetLogin(), request.getTargetRole(), request.getPayload());
+        
+        return Response.ok()
+                .entity("{\"status\": \"Message sent\"}")
+                .build();
     }
 
     @Data
