@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'io.quarkus' version '3.36.2'
+    id 'io.quarkus' version '3.39.3'
 }
 
 repositories {
@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
     // Quarkus BOM for dependency management
-    implementation platform("io.quarkus.platform:quarkus-bom:3.36.2")
+    implementation platform("io.quarkus.platform:quarkus-bom:3.39.3")
     
     // Core Dependencies
     implementation 'io.quarkus:quarkus-arc'
@@ -27,19 +27,19 @@ dependencies {
     implementation 'io.quarkus:quarkus-virtual-threads'
     implementation 'io.quarkus:quarkus-websockets'
 
-    // REST (correct extension names for Quarkus 3.36.2)
+    // REST (correct extension names for Quarkus 3.39.3)
     implementation 'io.quarkus:quarkus-rest'
     implementation 'io.quarkus:quarkus-rest-jackson'
     implementation 'io.quarkus:quarkus-rest-client-jackson'
     
     // Google Integration
-    implementation 'com.google.api-client:google-api-client:2.9.0'
-    implementation 'com.google.apis:google-api-services-calendar:v3-rev20260517-2.0.0'
-    implementation 'com.google.auth:google-auth-library-oauth2-http:1.48.0'
+    implementation 'com.google.api-client:google-api-client:2.9.1'
+    implementation 'com.google.apis:google-api-services-calendar:v3-rev20260708-2.0.0'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.52.0'
 
     // Lombok & Mapstruct
-    compileOnly 'org.projectlombok:lombok:1.18.42'
-    annotationProcessor 'org.projectlombok:lombok:1.18.42'
+    compileOnly 'org.projectlombok:lombok:1.18.48'
+    annotationProcessor 'org.projectlombok:lombok:1.18.48'
     
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
