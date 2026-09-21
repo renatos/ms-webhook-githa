@@ -67,6 +67,9 @@ jobs:
       
       - name: Build
         run: ./gradlew build -x test
+        env:
+          GITHUB_ACTOR: ${{ secrets.GPR_USER || github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GPR_TOKEN || secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -188,6 +191,8 @@ jobs:
             # Source SDKMAN to get Java (Gradle needs it for the wrapper)
             export SDKMAN_DIR="$HOME/.sdkman"
             [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
+            export GITHUB_ACTOR="${{ secrets.GPR_USER || github.actor }}"
+            export GITHUB_TOKEN="${{ secrets.GPR_TOKEN || secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}"
             
             cd /opt/ms-webhook-githa/source
             
