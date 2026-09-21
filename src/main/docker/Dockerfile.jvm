@@ -5,10 +5,12 @@ ENV TZ='America/Sao_Paulo'
 
 WORKDIR /deployments
 
-COPY build/quarkus-app/lib/ /deployments/lib/
-COPY build/quarkus-app/*.jar /deployments/
-COPY build/quarkus-app/app/ /deployments/app/
-COPY build/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --chown=1001:1001 build/quarkus-app/lib/ /deployments/lib/
+COPY --chown=1001:1001 build/quarkus-app/*.jar /deployments/
+COPY --chown=1001:1001 build/quarkus-app/app/ /deployments/app/
+COPY --chown=1001:1001 build/quarkus-app/quarkus/ /deployments/quarkus/
+
+RUN chmod -R 755 /deployments
 
 EXPOSE 8085
 USER 1001
