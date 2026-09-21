@@ -53,6 +53,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
       
+      - name: Configure Gradle Credentials
+        run: |
+          mkdir -p ~/.gradle
+          echo "gpr.user=${{ secrets.GPR_USER || 'renatos' }}" >> ~/.gradle/gradle.properties
+          echo "gpr.key=${{ secrets.GPR_TOKEN || secrets.GH_PACKAGES_TOKEN || secrets.PAT_TOKEN }}" >> ~/.gradle/gradle.properties
+      
       - name: Generate secret.jwk and JWT_SECRET_B64URL for production
         id: jwt_secret
         run: |
