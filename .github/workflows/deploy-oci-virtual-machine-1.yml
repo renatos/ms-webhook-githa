@@ -72,7 +72,7 @@ jobs:
           EOF
       
       - name: Build
-        run: ./gradlew build -x test
+        run: ./gradlew clean build -x test --no-daemon
         env:
           GITHUB_ACTOR: ${{ secrets.GPR_USER || github.actor }}
           GITHUB_TOKEN: ${{ secrets.GPR_TOKEN || secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
@@ -105,10 +105,9 @@ jobs:
           context: .
           file: src/main/docker/Dockerfile.jvm
           push: true
+          no-cache: true
           tags: ${{ steps.meta.outputs.tags }}
           platforms: linux/arm64
-          cache-from: type=registry,ref=${{ env.OCIR_REGISTRY }}/${{ env.OCIR_NAMESPACE }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.OCIR_REGISTRY }}/${{ env.OCIR_NAMESPACE }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
   deploy-jvm-to-vm:
     name: Deploy JVM to VM
